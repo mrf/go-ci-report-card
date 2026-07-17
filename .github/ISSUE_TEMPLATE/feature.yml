@@ -1,0 +1,36 @@
+name: Feature request
+description: Propose an improvement that preserves the project’s zero-cost, repository-owned model.
+title: "feature: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem or limitation should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Explain the desired behavior, configuration, or interface.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Project constraints
+      options:
+        - label: The proposal can remain free for public repositories.
+          required: true
+        - label: The proposal does not require an application server, database, analytics, or remote browser assets.
+          required: true
+        - label: I searched existing issues and pull requests.
+          required: true
+

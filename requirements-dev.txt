@@ -1,0 +1,4 @@
+# Dev-only lint and type-check tooling for the repository's own Python code.
+# The report generator itself remains dependency-free.
+ruff==0.15.22
+mypy==2.3.0

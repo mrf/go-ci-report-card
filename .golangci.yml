@@ -1,0 +1,12 @@
+# Strictest-by-default: every linter enabled; each disable below is deliberate.
+run:
+  timeout: 5m
+
+linters:
+  enable-all: true
+  disable:
+    # Deprecated since v1.64.0: duplicate of usetesting, which stays enabled.
+    - tenv
+    # depguard needs a hand-written import allowlist; this module deliberately
+    # has zero dependencies, so there is no import policy for it to enforce.
+    - depguard
