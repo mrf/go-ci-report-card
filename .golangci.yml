@@ -25,6 +25,13 @@ linters:
         # Diagnostics written to stderr; a failed write cannot be reported anywhere else.
         - fmt.Fprintf
         - fmt.Fprintln
+    tagliatelle:
+      case:
+        rules:
+          # report.json schema_version 1 is snake_case by contract with the
+          # published pages; TOML keys follow the shipped config file.
+          json: snake
+          toml: snake
     varnamelen:
       # Idiomatic short names in tight scopes.
       ignore-names: [fs, tc, i, r, sb, re, ok, p, c, e, o]
@@ -32,9 +39,10 @@ linters:
         - t *testing.T
   exclusions:
     rules:
-      # Test tables and helpers legitimately repeat literals and run long.
+      # Test tables and helpers legitimately repeat literals and run long,
+      # and read back files they wrote under t.TempDir (gosec G304).
       - path: _test\.go
-        linters: [funlen, lll, goconst, maintidx, dupl, gocognit, cyclop]
+        linters: [funlen, lll, goconst, maintidx, dupl, gocognit, cyclop, gosec]
 
 formatters:
   enable:

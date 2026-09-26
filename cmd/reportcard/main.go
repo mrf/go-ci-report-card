@@ -1,25 +1,29 @@
 // Command reportcard generates a static Go project report card.
 //
-// Stage 1 of the Go rewrite: this binary parses the full flag set, loads and
-// validates the configuration, and prints the resolved configuration. Checks,
-// scoring, and site rendering arrive in later stages.
+// Stage 2 of the Go rewrite: the binary loads and validates configuration,
+// runs the checks, writes report.json and the GitHub Actions metadata, and
+// prints the one-line outcome. Site rendering (index.html and assets)
+// arrives in stage 3.
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
-	"github.com/BurntSushi/toml"
-
+	"github.com/mrf/go-ci-report-card/internal/checks"
 	"github.com/mrf/go-ci-report-card/internal/config"
+	"github.com/mrf/go-ci-report-card/internal/report"
 )
 
 const (
 	exitOK            = 0
+	exitGateFailed    = 1
 	exitConfiguration = 2
 )
 
@@ -34,12 +38,12 @@ type options struct {
 }
 
 func main() {
-	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr, os.Getenv))
+	os.Exit(run(context.Background(), os.Args[1:], os.Stdout, os.Stderr, os.Getenv))
 }
 
 // run is main without the process globals: getenv supplies environment
 // variables so tests can run in parallel.
-func run(args []string, stdout, stderr io.Writer, getenv func(string) string) int {
+func run(ctx context.Context, args []string, stdout, stderr io.Writer, getenv func(string) string) int {
 	opts, err := parseFlags(args, stderr, getenv)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -70,16 +74,44 @@ func run(args []string, stdout, stderr io.Writer, getenv func(string) string) in
 		return exitConfiguration
 	}
 
-	fmt.Fprintf(stdout, "# repo_root = %q\n# source = %q\n# output = %q\n# enforce = %v\n# github_output = %q\n",
-		repoRoot, cfg.SourcePath(repoRoot), output, opts.enforce, opts.githubOutput)
+	source := cfg.SourcePath(repoRoot)
+	results := checks.RunAll(ctx, cfg, source)
+	repo := report.RepositoryMetadata(ctx, repoRoot, cfg.Project.RepositoryURL, getenv)
+	rep := report.Build(cfg, results, repo, report.GeneratedAt(getenv, time.Now))
 
-	if err := toml.NewEncoder(stdout).Encode(cfg); err != nil {
+	if err := writeOutputs(rep, output, opts.githubOutput, getenv("GITHUB_STEP_SUMMARY")); err != nil {
 		fmt.Fprintf(stderr, "generation error: %v\n", err)
 
 		return exitConfiguration
 	}
 
+	outcome := "FAIL"
+	if rep.Passed {
+		outcome = "PASS"
+	}
+
+	fmt.Fprintf(stdout, "%s  Grade %s  Score %.1f/100\n", outcome, rep.Grade, float64(rep.Score))
+	fmt.Fprintf(stdout, "Static report written to %s\n", output)
+
+	if opts.enforce && !rep.Passed {
+		return exitGateFailed
+	}
+
 	return exitOK
+}
+
+// writeOutputs writes report.json under output, then the GitHub Actions
+// output and step summary files.
+func writeOutputs(rep *report.Report, output, githubOutput, stepSummary string) error {
+	if err := report.WriteJSON(rep, filepath.Join(output, "report.json")); err != nil {
+		return fmt.Errorf("report.json: %w", err)
+	}
+
+	if err := report.WriteCIMetadata(rep, githubOutput, stepSummary); err != nil {
+		return fmt.Errorf("ci metadata: %w", err)
+	}
+
+	return nil
 }
 
 // resolvePath returns path unchanged when absolute or empty, else joined to
