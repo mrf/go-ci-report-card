@@ -1,9 +1,8 @@
 // Command reportcard generates a static Go project report card.
 //
-// Stage 2 of the Go rewrite: the binary loads and validates configuration,
-// runs the checks, writes report.json and the GitHub Actions metadata, and
-// prints the one-line outcome. Site rendering (index.html and assets)
-// arrives in stage 3.
+// The binary loads and validates configuration, runs the checks, writes the
+// static site (index.html, report.json, assets/, .nojekyll) and the GitHub
+// Actions metadata, and prints the one-line outcome.
 package main
 
 import (
@@ -19,6 +18,7 @@ import (
 	"github.com/mrf/go-ci-report-card/internal/checks"
 	"github.com/mrf/go-ci-report-card/internal/config"
 	"github.com/mrf/go-ci-report-card/internal/report"
+	"github.com/mrf/go-ci-report-card/internal/site"
 )
 
 const (
@@ -100,11 +100,11 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, getenv fu
 	return exitOK
 }
 
-// writeOutputs writes report.json under output, then the GitHub Actions
+// writeOutputs writes the static site under output, then the GitHub Actions
 // output and step summary files.
 func writeOutputs(rep *report.Report, output, githubOutput, stepSummary string) error {
-	if err := report.WriteJSON(rep, filepath.Join(output, "report.json")); err != nil {
-		return fmt.Errorf("report.json: %w", err)
+	if err := site.Write(rep, output); err != nil {
+		return fmt.Errorf("site: %w", err)
 	}
 
 	if err := report.WriteCIMetadata(rep, githubOutput, stepSummary); err != nil {

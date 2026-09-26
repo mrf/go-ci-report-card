@@ -478,9 +478,18 @@ func (c *Config) resolveProject(source, slug string) {
 		c.Project.Name = filepath.Base(source)
 	}
 
-	if !accentPattern.MatchString(c.Project.Accent) {
-		c.Project.Accent = DefaultAccent
+	c.Project.Accent = ValidAccent(c.Project.Accent)
+}
+
+// ValidAccent returns value when it is a six-digit hex colour such as
+// "#e4572e", else DefaultAccent. The site renderer applies the same rule to
+// the report so a hand-edited report.json cannot inject CSS.
+func ValidAccent(value string) string {
+	if accentPattern.MatchString(value) {
+		return value
 	}
+
+	return DefaultAccent
 }
 
 func (c *Config) validateRepositoryURL() error {

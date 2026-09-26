@@ -90,6 +90,12 @@ func TestGoldenReport(t *testing.T) {
 		t.Errorf("report.json differs from golden.\n got: %s\nwant: %s", got, want)
 	}
 
+	for _, name := range []string{"index.html", "assets/style.css", "assets/app.js", ".nojekyll"} {
+		if _, err := os.Stat(filepath.Join(output, name)); err != nil {
+			t.Errorf("site is missing %s: %v", name, err)
+		}
+	}
+
 	gotOutput, _ := os.ReadFile(githubOutput)
 	if string(gotOutput) != "passed=true\nscore=81.2\ngrade=B-\n" {
 		t.Errorf("github output = %q", gotOutput)
