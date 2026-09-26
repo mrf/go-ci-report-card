@@ -12,7 +12,7 @@ import (
 
 // exampleConfig is the shipped starter config. Every value in it must equal
 // the built-in default so a consumer with no config file gets the same report.
-const exampleConfig = "../../reportcard/config.toml"
+const exampleConfig = "../../examples/config.toml"
 
 func noEnv(string) string { return "" }
 

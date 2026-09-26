@@ -19,32 +19,25 @@ Private repositories use the Actions minutes and Pages availability included
 with their GitHub plan. If a guaranteed $0 bill is the requirement, keep the
 reporting repositories public and do not opt into paid GitHub usage.
 
-## What lives in each project
-
-```text
-.github/workflows/report-card.yml  Run checks, publish Pages, enforce the gate
-reportcard/config.toml             Project name, target score, checks, weights
-reportcard/generate.py             Dependency-free static report generator
-reportcard/template.html           Page structure
-reportcard/assets/                 Local CSS and JavaScript
-```
-
-The generated `_site/` directory is disposable and ignored by Git. GitHub
-Pages receives it directly as a deployment artifact, so there is no `gh-pages`
-branch and no bot commit noise.
-
 ## Turn it on
 
-1. Copy `.github/workflows/report-card.yml` and the entire `reportcard/`
-   directory into a Go repository.
-2. Edit `reportcard/config.toml`. In most repositories, `source_dir = "."` is
-   already correct. Adjust the project copy, coverage target, check weights,
-   and `minimum_score`.
-3. Confirm the repository has a root `go.mod`. If it lives elsewhere, change
-   `go-version-file` in the workflow and set `project.source_dir` to that module.
-4. On GitHub, open **Settings → Pages → Build and deployment** and choose
+1. Add `.github/workflows/report-card.yml` to a Go repository:
+
+   ```yaml
+   name: Report card
+   on: [push, pull_request]
+   permissions: {contents: read, pages: write, id-token: write}
+   jobs:
+     report:
+       uses: mrf/go-ci-report-card/.github/workflows/reportcard.yml@v1
+       with:
+         min-score: 85
+         coverage-target: 80
+   ```
+
+2. On GitHub, open **Settings → Pages → Build and deployment** and choose
    **GitHub Actions** as the source.
-5. Push to the default branch. The report appears at
+3. Push to the default branch. The report appears at
    `https://OWNER.github.io/REPOSITORY/`.
 
 Pull requests run the same analysis and quality gate but never deploy Pages.
@@ -61,12 +54,12 @@ gate job reports whether the configured score was met.
 | Tests & coverage | 30 | Tests pass; coverage is scored against the target |
 | Module integrity | 15 | `go mod verify` succeeds |
 
-The overall score is a weighted average. The default gate is 80. All default
-checks use only Python's standard library and the official Go toolchain.
+The overall score is a weighted average. The default gate is 80.
 
 ## Customize a project
 
-Change the identity and thresholds in `reportcard/config.toml`:
+Change the identity and thresholds in a config file (see
+[`examples/config.toml`](examples/config.toml)) and pass it as `config:`:
 
 ```toml
 [project]
@@ -102,20 +95,19 @@ no third-party analyzer downloads.
 
 ## Run it locally
 
-Python 3.11+ and Go are the only requirements:
+Go is the only requirement:
 
 ```bash
-python3 reportcard/generate.py --output _site --enforce
-python3 -m http.server 8000 --directory _site
+go run github.com/mrf/go-ci-report-card/cmd/reportcard@v1 -output _site -enforce
 ```
 
-Open `http://localhost:8000`. The second command is only a local preview; the
-published site is served by GitHub Pages.
+Open `_site/index.html` in a browser. The published site is served by GitHub
+Pages.
 
-Run the generator tests with:
+Run the tests with:
 
 ```bash
-python3 -m unittest discover -s tests
+go test -race ./...
 ```
 
 ## Operational notes

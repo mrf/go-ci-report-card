@@ -24,7 +24,7 @@ const (
 
 	defaultCustomDescription = "Project-specific command completes successfully."
 
-	// Built-in defaults, equal to the shipped reportcard/config.toml.
+	// Built-in defaults, equal to the shipped examples/config.toml.
 	defaultMinimumScore   = 80.0
 	defaultDetailsLimit   = 80
 	defaultTimeoutSeconds = 300
@@ -139,7 +139,7 @@ type BuiltinCheck struct {
 }
 
 // Default returns the built-in configuration, equal to the shipped
-// reportcard/config.toml.
+// examples/config.toml.
 func Default() Config {
 	return Config{
 		Project: Project{
