@@ -1,12 +1,47 @@
 # Strictest-by-default: every linter enabled; each disable below is deliberate.
+version: "2"
+
 run:
   timeout: 5m
 
 linters:
-  enable-all: true
+  default: all
   disable:
-    # Deprecated since v1.64.0: duplicate of usetesting, which stays enabled.
-    - tenv
-    # depguard needs a hand-written import allowlist; this module deliberately
-    # has zero dependencies, so there is no import policy for it to enforce.
+    # depguard needs a hand-written import allowlist; the only third-party
+    # import is BurntSushi/toml, so there is no import policy to enforce.
     - depguard
+    # Config structs overlay defaults, so partial literals are the design;
+    # exhaustruct would force every zero field to be spelled out.
+    - exhaustruct
+    - exhaustruct_v5
+    # Contradicts the idiomatic `if err := f(); err != nil` form.
+    - noinlineerr
+    # Superseded by wsl_v5 and gomodguard_v2, which stay enabled.
+    - wsl
+    - gomodguard
+  settings:
+    errcheck:
+      exclude-functions:
+        # Diagnostics written to stderr; a failed write cannot be reported anywhere else.
+        - fmt.Fprintf
+        - fmt.Fprintln
+    varnamelen:
+      # Idiomatic short names in tight scopes.
+      ignore-names: [fs, tc, i, r, sb, re, ok, p, c, e, o]
+      ignore-decls:
+        - t *testing.T
+  exclusions:
+    rules:
+      # Test tables and helpers legitimately repeat literals and run long.
+      - path: _test\.go
+        linters: [funlen, lll, goconst, maintidx, dupl, gocognit, cyclop]
+
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/mrf/go-ci-report-card

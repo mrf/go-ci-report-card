@@ -1,3 +1,5 @@
-module example.com/go-ci-report-card
+module github.com/mrf/go-ci-report-card
 
-go 1.23.0
+go 1.26.3
+
+require github.com/BurntSushi/toml v1.6.0
