@@ -1,0 +1,75 @@
+name: Go CI Report Card
+description: >-
+  Generate a static quality report card for a Go project. Assumes the
+  consumer has already run actions/setup-go so that `go` is on PATH.
+
+inputs:
+  version:
+    description: Version of go-ci-report-card to run (a tag, branch, or commit).
+    required: false
+    default: v1
+  config:
+    description: Path to a TOML config file. Built-in defaults apply when empty.
+    required: false
+    default: ""
+  source-dir:
+    description: Directory containing go.mod, relative to the repository root.
+    required: false
+    default: ""
+  min-score:
+    description: Minimum score for the quality gate to pass.
+    required: false
+    default: ""
+  coverage-target:
+    description: Coverage percentage that earns full marks on the tests check.
+    required: false
+    default: ""
+  name:
+    description: Project name shown in the report. Derived from the repository when empty.
+    required: false
+    default: ""
+  output:
+    description: Directory the static site is written to.
+    required: false
+    default: _site
+  enforce:
+    description: Fail this step when the quality gate does not pass.
+    required: false
+    default: "false"
+
+outputs:
+  passed:
+    description: "\"true\" when the score met the minimum, otherwise \"false\"."
+    value: ${{ steps.report.outputs.passed }}
+  score:
+    description: Overall score, one decimal place.
+    value: ${{ steps.report.outputs.score }}
+  grade:
+    description: Letter grade for the overall score.
+    value: ${{ steps.report.outputs.grade }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate report card
+      id: report
+      shell: bash
+      env:
+        RC_VERSION: ${{ inputs.version }}
+        RC_CONFIG: ${{ inputs.config }}
+        RC_SOURCE_DIR: ${{ inputs.source-dir }}
+        RC_MIN_SCORE: ${{ inputs.min-score }}
+        RC_COVERAGE_TARGET: ${{ inputs.coverage-target }}
+        RC_NAME: ${{ inputs.name }}
+        RC_OUTPUT: ${{ inputs.output }}
+        RC_ENFORCE: ${{ inputs.enforce }}
+      run: |
+        set -euo pipefail
+        args=(-output "$RC_OUTPUT" -github-output "$GITHUB_OUTPUT")
+        [ -n "$RC_CONFIG" ] && args+=(-config "$RC_CONFIG")
+        [ -n "$RC_SOURCE_DIR" ] && args+=(-source-dir "$RC_SOURCE_DIR")
+        [ -n "$RC_MIN_SCORE" ] && args+=(-min-score "$RC_MIN_SCORE")
+        [ -n "$RC_COVERAGE_TARGET" ] && args+=(-coverage-target "$RC_COVERAGE_TARGET")
+        [ -n "$RC_NAME" ] && args+=(-name "$RC_NAME")
+        [ "$RC_ENFORCE" = "true" ] && args+=(-enforce)
+        go run "github.com/mrf/go-ci-report-card/cmd/reportcard@${RC_VERSION}" "${args[@]}"

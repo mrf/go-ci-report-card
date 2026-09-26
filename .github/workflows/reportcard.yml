@@ -1,18 +1,53 @@
 name: Go CI Report Card
 
 on:
-  push:
-  pull_request:
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      min-score:
+        description: Minimum score for the quality gate to pass.
+        type: string
+        required: false
+        default: ""
+      coverage-target:
+        description: Coverage percentage that earns full marks on the tests check.
+        type: string
+        required: false
+        default: ""
+      config:
+        description: Path to a TOML config file. Built-in defaults apply when empty.
+        type: string
+        required: false
+        default: ""
+      source-dir:
+        description: Directory containing go.mod, relative to the repository root.
+        type: string
+        required: false
+        default: ""
+      name:
+        description: Project name shown in the report. Derived from the repository when empty.
+        type: string
+        required: false
+        default: ""
+      go-version-file:
+        description: File actions/setup-go reads the Go version from.
+        type: string
+        required: false
+        default: go.mod
+    outputs:
+      passed:
+        description: "\"true\" when the score met the minimum, otherwise \"false\"."
+        value: ${{ jobs.analyze.outputs.passed }}
+      score:
+        description: Overall score, one decimal place.
+        value: ${{ jobs.analyze.outputs.score }}
+      grade:
+        description: Letter grade for the overall score.
+        value: ${{ jobs.analyze.outputs.grade }}
 
 permissions:
   contents: read
   pages: write
   id-token: write
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   analyze:
@@ -28,18 +63,21 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version-file: ${{ inputs.go-version-file }}
           cache: false
 
       - name: Generate static report
         id: report
-        run: >-
-          python3 reportcard/generate.py
-          --config reportcard/config.toml
-          --output _site
-          --github-output "$GITHUB_OUTPUT"
+        uses: mrf/go-ci-report-card@v1
+        with:
+          config: ${{ inputs.config }}
+          source-dir: ${{ inputs.source-dir }}
+          min-score: ${{ inputs.min-score }}
+          coverage-target: ${{ inputs.coverage-target }}
+          name: ${{ inputs.name }}
+          output: _site
 
       - name: Configure GitHub Pages
         if: ${{ github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch }}

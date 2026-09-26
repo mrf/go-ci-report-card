@@ -1,6 +1,6 @@
 # Go rewrite and distribution redesign
 
-Status: reviewed and approved by Mark 2026-09-26.
+Status: implemented 2026-09-26 (reviewed and approved by Mark 2026-09-26).
 
 ## Problem
 
