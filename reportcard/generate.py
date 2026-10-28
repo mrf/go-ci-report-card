@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Go CI Report Card contributors
 """Generate a static, dependency-free Go project report card."""
 
 from __future__ import annotations
@@ -131,7 +132,7 @@ def run_command(
         return 124, lines, time.monotonic() - started
 
 
-def result(  # noqa: PLR0913 -- a report row is nine independent scalar fields; callers (including tests) rely on this flat signature
+def result(  # noqa: PLR0913, PLR0917 -- a report row is nine independent scalar fields; callers (including tests) rely on this flat signature
     check_id: str,
     label: str,
     description: str,
@@ -161,7 +162,7 @@ def result(  # noqa: PLR0913 -- a report row is nine independent scalar fields; 
     }
 
 
-def command_check(  # noqa: PLR0913 -- mirrors result()'s flat field style; every argument is a distinct check input
+def command_check(  # noqa: PLR0913, PLR0917 -- mirrors result()'s flat field style; every argument is a distinct check input
     check_id: str,
     command: list[str],
     source: Path,

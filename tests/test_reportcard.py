@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Go CI Report Card contributors
 """Tests for reportcard/generate.py, loaded directly from its file path."""
 
 from __future__ import annotations
