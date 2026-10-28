@@ -1,0 +1,10 @@
+[project]
+name = "fixture"
+tagline = "Golden-test fixture."
+
+[[custom_checks]]
+id = "toolchain"
+label = "Toolchain"
+description = "The Go toolchain answers."
+command = ["go", "version"]
+weight = 10
