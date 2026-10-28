@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="__DESCRIPTION__">
+    <meta name="description" content="{{.Description}}">
     <meta name="color-scheme" content="light dark">
-    <meta name="theme-color" content="__ACCENT__">
-    <title>__TITLE__ · Go CI Report Card</title>
+    <meta name="theme-color" content="{{.Accent}}">
+    <title>{{.Title}} · Go CI Report Card</title>
     <link rel="stylesheet" href="assets/style.css">
   </head>
-  <body style="--accent: __ACCENT__">
+  <body style="--accent: {{.Accent}}">
     <a class="skip-link" href="#checks">Skip to checks</a>
     <header class="site-header">
       <a class="brand" href="./" aria-label="Go CI Report Card home">
@@ -26,8 +26,8 @@
       <section class="hero" aria-labelledby="project-name">
         <div class="hero-copy">
           <p class="eyebrow">AUTOMATED GO QUALITY REPORT</p>
-          <h1 id="project-name">__TITLE__</h1>
-          <p class="tagline" id="tagline">__DESCRIPTION__</p>
+          <h1 id="project-name">{{.Title}}</h1>
+          <p class="tagline" id="tagline">{{.Description}}</p>
           <div class="repo-meta" id="repo-meta" aria-label="Report metadata"></div>
           <a class="repo-link" id="repo-link" hidden>View source <span aria-hidden="true">↗</span></a>
         </div>
@@ -76,7 +76,7 @@
     </footer>
 
     <noscript>This report needs JavaScript enabled to display its locally embedded results.</noscript>
-    <script id="report-data" type="application/json">__REPORT_DATA__</script>
+    <script id="report-data" type="application/json">{{.ReportData}}</script>
     <script src="assets/app.js" defer></script>
   </body>
 </html>
